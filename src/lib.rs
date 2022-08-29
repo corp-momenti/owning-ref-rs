@@ -288,6 +288,9 @@ impl<T> Erased for T {}
 /// Helper trait for erasing the concrete type of what an owner derferences to,
 /// for example `Box<T> -> Box<dyn Erased>`. This would be unneeded with
 /// higher kinded types support in the language.
+///
+/// # Safety
+/// This function is not thread-safe.
 pub unsafe trait IntoErased<'a> {
     /// Owner with the dereference type substituted to `Erased`.
     type Erased;
@@ -330,6 +333,9 @@ impl<'t, O, T: ?Sized> OwningRef<'t, O, T> {
     ///
     /// This is useful for cases where coherence rules prevents implementing the trait
     /// without adding a dependency to this crate in a third-party library.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     pub unsafe fn new_assert_stable_address(o: O) -> Self
     where
         O: Deref<Target = T>,
@@ -374,6 +380,9 @@ impl<'t, O, T: ?Sized> OwningRef<'t, O, T> {
     }
 
     /// Old version of `map_with_owner`, now recognized as unsafe.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     #[deprecated(
         since = "0.5.0",
         note = "unsafe function: please use map_with_owner instead"
@@ -468,6 +477,9 @@ impl<'t, O, T: ?Sized> OwningRef<'t, O, T> {
     // }
 
     /// Old version of `try_map_with_owner`, now recognized as unsafe.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     #[deprecated(
         since = "0.5.0",
         note = "unsafe function: please use try_map_with_owner instead"
@@ -527,6 +539,9 @@ impl<'t, O, T: ?Sized> OwningRef<'t, O, T> {
     /// The new owner type needs to still contain the original owner in some way
     /// so that the reference into it remains valid. This function is marked unsafe
     /// because the user needs to manually uphold this guarantee.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     pub unsafe fn map_owner<F, P>(self, f: F) -> OwningRef<'t, P, T>
     where
         O: StableAddress,
@@ -640,6 +655,9 @@ impl<'t, O, T: ?Sized> OwningRefMut<'t, O, T> {
     ///
     /// This is useful for cases where coherence rules prevents implementing the trait
     /// without adding a dependency to this crate in a third-party library.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     pub unsafe fn new_assert_stable_address(mut o: O) -> Self
     where
         O: DerefMut<Target = T>,
@@ -672,6 +690,8 @@ impl<'t, O, T: ?Sized> OwningRefMut<'t, O, T> {
     /// }
     /// ```
     ///
+    /// # Safety
+    /// This function is not thread-safe.
     #[deprecated(
         since = "0.5.0",
         note = "unsafe function. can create aliased references"
@@ -745,6 +765,8 @@ impl<'t, O, T: ?Sized> OwningRefMut<'t, O, T> {
     /// }
     /// ```
     ///
+    /// # Safety
+    /// This function is not thread-safe.
     #[deprecated(
         since = "0.5.0",
         note = "unsafe function. can create aliased references"
@@ -800,6 +822,9 @@ impl<'t, O, T: ?Sized> OwningRefMut<'t, O, T> {
     /// The new owner type needs to still contain the original owner in some way
     /// so that the reference into it remains valid. This function is marked unsafe
     /// because the user needs to manually uphold this guarantee.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     pub unsafe fn map_owner<F, P>(self, f: F) -> OwningRefMut<'t, P, T>
     where
         O: StableAddress,
@@ -870,6 +895,9 @@ impl<'t, O, T: ?Sized> OwningRefMut<'t, O, T> {
     }
 
     /// A reference to the underlying owner.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     #[deprecated(
         since = "0.5.0",
         note = "unsafe function. can create aliased references"
@@ -879,6 +907,9 @@ impl<'t, O, T: ?Sized> OwningRefMut<'t, O, T> {
     }
 
     /// A mutable reference to the underlying owner.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     #[deprecated(
         since = "0.5.0",
         note = "unsafe function. can create aliased references"
@@ -962,6 +993,9 @@ pub trait ToHandle {
 
     /// Given an appropriately-long-lived pointer to ourselves, create a
     /// handle to be encapsulated by the `OwningHandle`.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     unsafe fn to_handle(x: *const Self) -> Self::Handle;
 }
 
@@ -972,6 +1006,9 @@ pub trait ToHandleMut {
 
     /// Given an appropriately-long-lived pointer to ourselves, create a
     /// mutable handle to be encapsulated by the `OwningHandle`.
+    ///
+    /// # Safety
+    /// This function is not thread-safe.
     unsafe fn to_handle_mut(x: *const Self) -> Self::HandleMut;
 }
 
@@ -1094,13 +1131,13 @@ unsafe impl<'t, O, T: ?Sized> StableAddress for OwningRefMut<'t, O, T> {}
 
 impl<'t, O, T: ?Sized> AsRef<T> for OwningRef<'t, O, T> {
     fn as_ref(&self) -> &T {
-        &*self
+        self
     }
 }
 
 impl<'t, O, T: ?Sized> AsRef<T> for OwningRefMut<'t, O, T> {
     fn as_ref(&self) -> &T {
-        &*self
+        self
     }
 }
 
@@ -1112,13 +1149,13 @@ impl<'t, O, T: ?Sized> AsMut<T> for OwningRefMut<'t, O, T> {
 
 impl<'t, O, T: ?Sized> Borrow<T> for OwningRef<'t, O, T> {
     fn borrow(&self) -> &T {
-        &*self
+        self
     }
 }
 
 impl<'t, O, T: ?Sized> Borrow<T> for OwningRefMut<'t, O, T> {
     fn borrow(&self) -> &T {
-        &*self
+        self
     }
 }
 
@@ -1193,26 +1230,26 @@ unsafe impl<'t, O, T: ?Sized> CloneStableAddress for OwningRef<'t, O, T> where O
 unsafe impl<'t, O, T: ?Sized> Send for OwningRef<'t, O, T>
 where
     O: Send,
-    for<'a> (&'a T): Send,
+    for<'a> &'a T: Send,
 {
 }
 unsafe impl<'t, O, T: ?Sized> Sync for OwningRef<'t, O, T>
 where
     O: Sync,
-    for<'a> (&'a T): Sync,
+    for<'a> &'a T: Sync,
 {
 }
 
 unsafe impl<'t, O, T: ?Sized> Send for OwningRefMut<'t, O, T>
 where
     O: Send,
-    for<'a> (&'a mut T): Send,
+    for<'a> &'a mut T: Send,
 {
 }
 unsafe impl<'t, O, T: ?Sized> Sync for OwningRefMut<'t, O, T>
 where
     O: Sync,
-    for<'a> (&'a mut T): Sync,
+    for<'a> &'a mut T: Sync,
 {
 }
 
@@ -1227,7 +1264,7 @@ where
     T: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
-        (&*self as &T).eq(&*other as &T)
+        (self as &T).eq(other as &T)
     }
 }
 
@@ -1238,7 +1275,7 @@ where
     T: PartialOrd,
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        (&*self as &T).partial_cmp(&*other as &T)
+        (self as &T).partial_cmp(other as &T)
     }
 }
 
@@ -1247,7 +1284,7 @@ where
     T: Ord,
 {
     fn cmp(&self, other: &Self) -> Ordering {
-        (&*self as &T).cmp(&*other as &T)
+        (self as &T).cmp(other as &T)
     }
 }
 
@@ -1256,7 +1293,7 @@ where
     T: Hash,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        (&*self as &T).hash(state);
+        (self as &T).hash(state);
     }
 }
 
@@ -1265,7 +1302,7 @@ where
     T: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
-        (&*self as &T).eq(&*other as &T)
+        (self as &T).eq(other as &T)
     }
 }
 
@@ -1276,7 +1313,7 @@ where
     T: PartialOrd,
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        (&*self as &T).partial_cmp(&*other as &T)
+        (self as &T).partial_cmp(other as &T)
     }
 }
 
@@ -1285,7 +1322,7 @@ where
     T: Ord,
 {
     fn cmp(&self, other: &Self) -> Ordering {
-        (&*self as &T).cmp(&*other as &T)
+        (self as &T).cmp(other as &T)
     }
 }
 
@@ -1294,7 +1331,7 @@ where
     T: Hash,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        (&*self as &T).hash(state);
+        (self as &T).hash(state);
     }
 }
 
