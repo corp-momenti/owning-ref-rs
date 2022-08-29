@@ -35,7 +35,7 @@ fn return_owned_and_referenced() -> OwningRef<Vec<u8>, [u8]> {
 To get started, add the following to `Cargo.toml`.
 
 ```toml
-owning_ref = "0.1.0"
+owning_ref = "0.5.0"
 ```
 
 ...and see the docs for how to use it.

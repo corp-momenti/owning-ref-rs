@@ -1,6 +1,6 @@
 [package]
 name = "owning_ref"
-version = "0.1.0"
+version = "0.5.0"
 authors = [
     "Chris Ohk <utilforever@gmail.com>",
     "Marvin Löbel <loebel.marvin@gmail.com>"
